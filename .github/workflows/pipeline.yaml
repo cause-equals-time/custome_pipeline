@@ -39,7 +39,7 @@ jobs:
           AWS_SECRET_ACCESS_KEY: ${{ env.PIPELINE_USER_SECRET_ACCESS_KEY }}
           AWS_DEFAULT_REGION: eu-central-1
         run: |
-          sam deploy --template-file ${SAM_TEMPLATE} --stack-name ${DEV_STACK_NAME} --capabilities CAPABILITY_NAMED_IAM
+          sam deploy --template-file ${SAM_TEMPLATE} --resolve-s3 --stack-name ${DEV_STACK_NAME} --capabilities CAPABILITY_NAMED_IAM
   integration-test:
     if: github.ref == 'refs/heads/main'
     needs: [deploy-dev]
@@ -62,4 +62,4 @@ jobs:
           AWS_SECRET_ACCESS_KEY: ${{ env.PIPELINE_USER_SECRET_ACCESS_KEY }}
           AWS_DEFAULT_REGION: eu-central-1
         run: |
-          sam deploy --template-file ${SAM_TEMPLATE} --stack-name ${TEST_STACK_NAME} --capabilities CAPABILITY_NAMED_IAM
+          sam deploy --template-file ${SAM_TEMPLATE} --resolve-s3 --stack-name ${TEST_STACK_NAME} --capabilities CAPABILITY_NAMED_IAM
