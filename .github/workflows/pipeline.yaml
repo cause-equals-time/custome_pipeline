@@ -16,8 +16,8 @@ env:
   PIPELINE_USER_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
   REGION: eu-central-1
   SAM_TEMPLATE: template.yml
-  DEV_STACK_NAME: pipeline-api-dev
-  TEST_STACK_NAME: pipeline-api-prod
+  DEV_STACK_NAME: custom-pipeline-api-dev
+  TEST_STACK_NAME: custom-pipeline-api-test
 
 jobs:
   validation-test:
