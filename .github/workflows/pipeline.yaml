@@ -1,0 +1,65 @@
+name: Custom Pipeline
+
+on:
+  pull_request:
+    branches:
+      - main
+  push:
+    branches:
+      - main
+
+  # Allows you to run this workflow manually from the Actions tab
+  workflow_dispatch:
+
+env:
+  PIPELINE_USER_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+  PIPELINE_USER_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+  REGION: eu-central-1
+  SAM_TEMPLATE: template.yml
+  DEV_STACK_NAME: pipeline-api-dev
+  TEST_STACK_NAME: pipeline-api-prod
+
+jobs:
+  validation-test:
+    if: github.event_name == 'push'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - run: |
+          # trigger the tests here
+  deploy-dev:
+    if: github.ref == 'refs/heads/main'
+    needs: [validation-test]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: deploy to dev
+        env:
+          AWS_ACCESS_KEY_ID: ${{ env.PIPELINE_USER_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ env.PIPELINE_USER_SECRET_ACCESS_KEY }}
+          AWS_DEFAULT_REGION: eu-central-1
+        run: |
+          sam deploy --template-file ${SAM_TEMPLATE} --stack-name ${DEV_STACK_NAME} --capabilities CAPABILITY_NAMED_IAM
+  integration-test:
+    if: github.ref == 'refs/heads/main'
+    needs: [deploy-dev]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-node@v1
+      - run: npm install -g mocha
+      - run: npm install 
+      - run: mocha test/index.js
+  deploy-test:
+    if: github.ref == 'refs/heads/main'
+    needs: [integration-test]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: deploy to test
+        env:
+          AWS_ACCESS_KEY_ID: ${{ env.PIPELINE_USER_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ env.PIPELINE_USER_SECRET_ACCESS_KEY }}
+          AWS_DEFAULT_REGION: eu-central-1
+        run: |
+          sam deploy --template-file ${SAM_TEMPLATE} --stack-name ${TEST_STACK_NAME} --capabilities CAPABILITY_NAMED_IAM
